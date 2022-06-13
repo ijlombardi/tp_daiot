@@ -4,6 +4,8 @@
 #include "nvs_flash.h"
 #include "sntp_time.h"
 #include "mqtt_basico.h"
+#include <stdbool.h>
+
 
 extern bool time_sinc_ok;
 

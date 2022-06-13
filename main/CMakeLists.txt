@@ -6,5 +6,6 @@ idf_component_register(SRCS
     "jwt_token_gcp.c"
     "mqtt_basico.c"
     "base64url.c"
+    "DHT22.c"
 
                     INCLUDE_DIRS ".")

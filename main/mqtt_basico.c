@@ -39,6 +39,8 @@
 #include "esp_random.h"
 #include "esp_sleep.h"
 
+#include "DHT22.h"
+
 static const char *TAG = "MQTT MODULE: ";
 
 esp_mqtt_client_handle_t cliente = NULL;
@@ -208,15 +210,17 @@ void publicar_temperatura_task(void * parm)
 	char bufferTopic[350];
 	int msg_id;
 	char buffer_temp_txt[15];
+    char buffer_hum_txt[15];
 	char buffer_rssi_txt[15];
 	
 	float temp = 24;
+    float hum = 90;
     int8_t rssi = 0;
 	wifi_ap_record_t ap_info;
 
     uint32_t random_number;
 
-
+    setDHTgpio( 4 ); // Seteo el puerto de inicicio del medidor
 	while(1)
 	{
         if (mqtt_client_connected == true) {
@@ -232,7 +236,13 @@ void publicar_temperatura_task(void * parm)
                     temp -= 0.3;
             
             if (temp > 40) temp = 39.5;
-            if (temp < 5) temp = 5.5;   
+            if (temp < 5) temp = 5.5;
+
+            // Tomo la muestra de humedad del sensor
+            int ret = readDHT();
+            errorHandler(ret);
+            hum = getHumidity();
+            temp = getTemperature();
                 
             // Consulto al modulo el nivel de señal que esta recibiendo.
             esp_wifi_sta_get_ap_info(&ap_info);
@@ -241,8 +251,10 @@ void publicar_temperatura_task(void * parm)
 
             // Convertir a texto los valores.
             snprintf(buffer_temp_txt, sizeof(buffer_temp_txt), "%.2f", temp);
+            snprintf(buffer_hum_txt, sizeof(buffer_hum_txt), "%.2f", hum);
             snprintf(buffer_rssi_txt, sizeof(buffer_rssi_txt), "%d", rssi);
-            ESP_LOGI("Muestra: ", "T %s - RSSI %s", buffer_temp_txt, buffer_rssi_txt);
+            //ESP_LOGI("Muestra: ", "T %s - RSSI %s", buffer_temp_txt, buffer_rssi_txt);
+            ESP_LOGI("Muestra: ", "T %s - H %s - RSSI %s", buffer_temp_txt, buffer_hum_txt, buffer_rssi_txt);
 
                 bufferJson[0] = 0;
 
@@ -250,6 +262,8 @@ void publicar_temperatura_task(void * parm)
                 strcat(bufferJson, IOTCORE_DEVICE_NUMBER);
                 strcat(bufferJson, ", \"temperatura\": ");
                 strcat(bufferJson, buffer_temp_txt);
+                strcat(bufferJson, ", \"humedad\": ");
+                strcat(bufferJson, buffer_hum_txt);
                 strcat(bufferJson, ", \"rssi\": ");
                 strcat(bufferJson, buffer_rssi_txt);
                 strcat(bufferJson, " }");

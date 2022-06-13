@@ -1,0 +1,86 @@
+CREATE TABLE `ijl-test-project.sensor_data_db.sensores_tph_origen`
+(
+timestamp TIMESTAMP,
+gcp_device_id STRING,
+dev_id INT64,
+temperatura FLOAT64,
+presion FLOAT64,
+humedad FLOAT64,
+rssi INT64,
+wake_up_count INT64,
+last_error_count INT64,
+last_error_code INT64,
+last_on_time INT64,
+sntp_response_time INT64
+);
+
+CREATE TABLE `ijl-test-project.sensor_data_db.sensores_tph_desc_ubicacion`
+(
+dev_id INT64,
+ubicacion STRING,
+propietario STRING,
+descripcion STRING,
+temp_offset FLOAT64
+);
+
+
+
+CREATE VIEW `ijl-test-project.sensor_data_db.sensores_tph_5min_interval` AS SELECT
+DATETIME_ADD('2010-01-01', INTERVAL CAST(ROUND(TIMESTAMP_DIFF(timestamp, '2010-01-01',
+MINUTE) / 5) * 5 AS INT64) MINUTE ) as tiempo,
+dev_id, presion, humedad, rssi,
+(
+select propietario FROM `ijl-test-project.sensor_data_db.sensores_tph_desc_ubicacion` as T2
+where T2.dev_id = T1.dev_id
+)
+as propietario,
+T1.temperatura +
+(
+select temp_offset FROM `ijl-test-project.sensor_data_db.sensores_tph_desc_ubicacion` as T3
+where T3.dev_id = T1.dev_id
+)
+as temperatura
+FROM `ijl-test-project.sensor_data_db.sensores_tph_origen` as T1
+order by tiempo desc;
+
+
+CREATE VIEW `ijl-test-project.sensor_data_db.sensores_tph_ultimos_valores_1`
+AS SELECT MAX(tiempo) as tiempo_registro, dev_id
+FROM `ijl-test-project.sensor_data_db.sensores_tph_5min_interval`as Tiempos
+group by dev_id
+;
+
+
+CREATE VIEW `ijl-test-project.sensor_data_db.sensores_tph_ultimos_valores_RES`
+AS SELECT *, (
+SELECT avg(temperatura) FROM `ijl-test-project.sensor_data_db.sensores_tph_5min_interval` as T2
+where
+T1.tiempo_registro = T2.tiempo
+and
+T1.dev_id = T2.dev_id
+) temperatura, (
+SELECT avg(presion) FROM `ijl-test-project.sensor_data_db.sensores_tph_5min_interval` as T3
+where
+T1.tiempo_registro = T3.tiempo
+and
+T1.dev_id = T3.dev_id
+) presion, (
+SELECT avg(humedad) FROM `ijl-test-project.sensor_data_db.sensores_tph_5min_interval` as T4
+where
+T1.tiempo_registro = T4.tiempo
+and
+T1.dev_id = T4.dev_id
+) humedad, (
+SELECT avg(rssi) FROM `ijl-test-project.sensor_data_db.sensores_tph_5min_interval` as T5
+where
+T1.tiempo_registro = T5.tiempo
+and
+T1.dev_id = T5.dev_id
+) rssi
+FROM `ijl-test-project.sensor_data_db.sensores_tph_ultimos_valores_1` as T1;
+
+
+INSERT INTO `ijl-test-project.sensor_data_db.sensores_tph_desc_ubicacion`
+(dev_id, propietario, temp_offset)
+values
+(110,'Ignacio Lombardi',0.0);

@@ -10,6 +10,7 @@
 
 #include "stdlib.h"
 #include "stdio.h"
+#include "DHT22.h"
 
 // Datos de acceso a Google Cloud Platform
 
@@ -20,8 +21,8 @@
 #define BROKER_URI				"mqtts://mqtt.2030.ltsapis.goog"
 
 #define IOTCORE_USERNAME		"unused"
-#define IOTCORE_PROJECTID		"daiot2022"
-#define IOTCORE_DEVICE_NUMBER	"1xx" // Completar el ID que te corresponda segun tu nombre:
+#define IOTCORE_PROJECTID		"ijl-test-project"
+#define IOTCORE_DEVICE_NUMBER	"110" // Completar el ID que te corresponda segun tu nombre:
 
 // 101	Leopoldo Zimperz
 // 102	Oscar Antonio
@@ -39,12 +40,12 @@
 
 #define IOTCORE_DEVICEID		"device-"IOTCORE_DEVICE_NUMBER
 #define IOTCORE_REGION			"us-central1"
-#define IOTCORE_REGISTRY		"daiot_reg"
+#define IOTCORE_REGISTRY		"ijl_iot_reg"
 #define IOTCORE_CLIENTID		"projects/"IOTCORE_PROJECTID"/locations/"IOTCORE_REGION"/registries/"IOTCORE_REGISTRY"/devices/"IOTCORE_DEVICEID
 
 #define IOTCORE_TOKEN_EXPIRATION_TIME_MINUTES		60 * 24
 
-#define TEMP_PUBLISH_INTERVAL_SECONDS       60 * 4
+#define TEMP_PUBLISH_INTERVAL_SECONDS       30 * 1
 
 #define ERROR_CODE_RESET	1
 #define ERROR_CODE_JWT		2
